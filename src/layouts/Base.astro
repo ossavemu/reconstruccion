@@ -10,6 +10,8 @@ const {
   title,
   description = "Iniciativa humanitaria de orientación técnica para afectados por el terremoto.",
 } = Astro.props;
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
@@ -18,7 +20,17 @@ const {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:locale" content="es_CO" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <title>{title}</title>
   </head>
   <body>
@@ -39,6 +51,10 @@ const {
         <p>
           Iniciativa humanitaria y gratuita para sobrevivientes del terremoto
           del 10 de agosto de 2026 en Colombia.
+        </p>
+        <p>
+          Si tiene cualquier información adicional o pregunta, escriba a
+          <a href="mailto:osanvem@gmail.com">osanvem@gmail.com</a>.
         </p>
         <p>
           El código de esta plataforma es abierto:
