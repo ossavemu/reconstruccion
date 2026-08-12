@@ -21,12 +21,16 @@ export const POST: APIRoute = async ({ request }) => {
 
   const email = normalizeEmail(body.email ?? "");
   const fecha = (body.fecha ?? "").trim();
+  const franja = (body.franja ?? "").trim();
 
   if (!isValidEmail(email)) {
     return json({ error: "Ingrese un correo valido." }, 400);
   }
   if (!nextBusinessDays(5).includes(fecha)) {
     return json({ error: "Escoja uno de los dias disponibles." }, 400);
+  }
+  if (franja !== "manana" && franja !== "tarde") {
+    return json({ error: "Escoja una franja horaria." }, 400);
   }
 
   try {
@@ -50,8 +54,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     try {
       await db.execute({
-        sql: "INSERT INTO votos (email, fecha) VALUES (?, ?)",
-        args: [email, fecha],
+        sql: "INSERT INTO votos (email, fecha, franja) VALUES (?, ?, ?)",
+        args: [email, fecha, franja],
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
@@ -61,7 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
       throw error;
     }
 
-    return json({ ok: true, fecha });
+    return json({ ok: true, fecha, franja });
   } catch (error) {
     console.error("votar endpoint error:", error);
     return json({ error: "No pudimos registrar su voto. Intente de nuevo." }, 500);

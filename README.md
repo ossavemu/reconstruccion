@@ -1,4 +1,4 @@
-# Renace
+# Reconstrucción
 
 Iniciativa humanitaria y gratuita para sobrevivientes del terremoto del 10 de
 agosto de 2026 en Colombia (M 7,4, epicentro en San José del Palmar, Chocó)
@@ -6,19 +6,19 @@ que quedaron sin vivienda.
 
 ## Qué hace
 
-- **Landing** con el plan por fases del proyecto.
+- **Landing** que presenta la idea y la reunión de orientación.
 - **Estimador de daños con IA** (`/estimar`): un formulario describe la
   vivienda y los daños; Claude genera un rango preliminar del costo de
-  reparación o reconstrucción en COP. Es la versión web de la Fase 1, cuyo
-  objetivo final es un bot de WhatsApp que reciba fotos de los daños.
+  reparación o reconstrucción en COP. Está en desarrollo un canal de WhatsApp
+  que recibirá fotos de los daños para su análisis.
 - **Modo reconstrucción** (`/reconstruccion`): la persona se registra con su
   correo y recibe por email (Resend) un enlace de votación.
 - **Votación** (`/votar`): cada correo registrado vota una sola vez por el día
   hábil de la reunión con el equipo de ingenieros voluntarios. El día más
   votado queda agendado.
 
-Las fases 2 (certificación de estimaciones por ingenieros civiles, que además
-entrena el modelo) y el bot de WhatsApp están en preparación.
+La certificación de estimaciones por ingenieros civiles (que además entrena
+el modelo) y el canal de WhatsApp están en preparación.
 
 ## Stack
 

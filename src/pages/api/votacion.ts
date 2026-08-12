@@ -4,7 +4,8 @@ import { nextBusinessDays } from "../../lib/agenda";
 
 export const prerender = false;
 
-// Returns the candidate business days and the current vote tally for each.
+// Returns the candidate business days with the public vote tally per day
+// and per time slot (manana / tarde, i.e. after 5 pm).
 export const GET: APIRoute = async () => {
   try {
     const db = getDb();
@@ -13,19 +14,30 @@ export const GET: APIRoute = async () => {
     const dias = nextBusinessDays(5);
     const placeholders = dias.map(() => "?").join(", ");
     const result = await db.execute({
-      sql: `SELECT fecha, COUNT(*) AS votos FROM votos WHERE fecha IN (${placeholders}) GROUP BY fecha`,
+      sql: `SELECT fecha, franja, COUNT(*) AS votos
+            FROM votos WHERE fecha IN (${placeholders})
+            GROUP BY fecha, franja`,
       args: dias,
     });
 
-    const tally = new Map<string, number>();
+    const tally = new Map<string, { manana: number; tarde: number }>();
     for (const row of result.rows) {
-      tally.set(String(row.fecha), Number(row.votos));
+      const fecha = String(row.fecha);
+      const entry = tally.get(fecha) ?? { manana: 0, tarde: 0 };
+      if (String(row.franja) === "tarde") entry.tarde += Number(row.votos);
+      else entry.manana += Number(row.votos);
+      tally.set(fecha, entry);
     }
 
-    const opciones = dias.map((fecha) => ({
-      fecha,
-      votos: tally.get(fecha) ?? 0,
-    }));
+    const opciones = dias.map((fecha) => {
+      const entry = tally.get(fecha) ?? { manana: 0, tarde: 0 };
+      return {
+        fecha,
+        manana: entry.manana,
+        tarde: entry.tarde,
+        votos: entry.manana + entry.tarde,
+      };
+    });
 
     return new Response(JSON.stringify({ opciones }), {
       status: 200,

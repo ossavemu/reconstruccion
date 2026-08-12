@@ -2,38 +2,59 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="Votar por el día de la reunión | Renace">
+<Base title="Votación del día de la reunión">
   <section>
     <div class="container">
       <h2>Votación del día de la reunión</h2>
       <p class="section-intro">
-        Escoja el día hábil que más le convenga para la reunión con el equipo
-        de ingenieros voluntarios. Solo pueden votar los correos registrados
-        en modo reconstrucción y cada correo vota una sola vez. El día más
-        votado será el de la reunión.
+        Escoja el día hábil y la franja horaria que más le convengan para la
+        reunión con el equipo de ingenieros voluntarios. Los votos son
+        públicos: los días se colorean de azul a amarillo según la cantidad de
+        votos. Cada correo vota una sola vez y la opción más votada será la de
+        la reunión.
       </p>
 
-      <form id="vote-form" class="panel">
-        <div class="field">
-          <label for="email">Correo registrado</label>
-          <input id="email" name="email" type="email" required />
+      <div class="vote-layout">
+        <div id="calendar" class="calendar">
+          <p class="notice">Cargando calendario...</p>
         </div>
 
-        <div class="field">
-          <label for="fecha">Día de la reunión</label>
-          <select id="fecha" name="fecha" required>
-            <option value="">Cargando días disponibles...</option>
-          </select>
-        </div>
+        <form id="vote-form" class="panel vote-panel">
+          <div class="field">
+            <span class="field-label">Franja horaria</span>
+            <div class="slot-row" role="radiogroup" aria-label="Franja horaria">
+              <button type="button" class="slot" data-franja="manana" role="radio" aria-checked="false">
+                Mañana
+                <small id="count-manana"></small>
+              </button>
+              <button type="button" class="slot" data-franja="tarde" role="radio" aria-checked="false">
+                Después de las 5 p.&nbsp;m.
+                <small id="count-tarde"></small>
+              </button>
+            </div>
+          </div>
 
-        <button type="submit" class="btn" id="submit-btn">Votar</button>
-      </form>
+          <div class="field">
+            <label for="email">Correo registrado</label>
+            <input id="email" name="email" type="email" required />
+          </div>
+
+          <input type="hidden" id="fecha" name="fecha" value="" />
+          <input type="hidden" id="franja" name="franja" value="" />
+
+          <button type="submit" class="btn" id="submit-btn">Votar</button>
+          <p class="notice">
+            Solo pueden votar los correos registrados en
+            <a href="/reconstruccion">modo reconstrucción</a>.
+          </p>
+        </form>
+      </div>
+
+      <p class="tally-summary" id="tally-summary"></p>
 
       <div id="result" class="result hidden">
         <h3>Voto registrado</h3>
         <p id="result-message"></p>
-        <h3>Así va la votación</h3>
-        <ul id="tally"></ul>
       </div>
 
       <div id="error" class="error-box hidden"></div>
@@ -41,51 +62,179 @@ import Base from "../layouts/Base.astro";
   </section>
 
   <script>
+    type Opcion = { fecha: string; votos: number; manana: number; tarde: number };
+
+    const calendar = document.getElementById("calendar") as HTMLDivElement;
+    const summary = document.getElementById("tally-summary") as HTMLElement;
     const form = document.getElementById("vote-form") as HTMLFormElement;
     const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
-    const select = document.getElementById("fecha") as HTMLSelectElement;
+    const fechaInput = document.getElementById("fecha") as HTMLInputElement;
+    const franjaInput = document.getElementById("franja") as HTMLInputElement;
     const resultBox = document.getElementById("result") as HTMLDivElement;
     const errorBox = document.getElementById("error") as HTMLDivElement;
 
-    const dayFormat = new Intl.DateTimeFormat("es-CO", {
+    const monthTitle = new Intl.DateTimeFormat("es-CO", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+    const longFormat = new Intl.DateTimeFormat("es-CO", {
       weekday: "long",
       day: "numeric",
       month: "long",
-      timeZone: "America/Bogota",
+      timeZone: "UTC",
     });
 
-    function labelFor(fecha: string): string {
-      return dayFormat.format(new Date(`${fecha}T12:00:00Z`));
+    const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
+    const FRANJAS: Record<string, string> = {
+      manana: "en la mañana",
+      tarde: "después de las 5 p. m.",
+    };
+
+    let opciones: Opcion[] = [];
+
+    function noonUtc(fecha: string): Date {
+      return new Date(`${fecha}T12:00:00Z`);
     }
 
-    async function loadOptions(): Promise<{ fecha: string; votos: number }[]> {
+    // Linear blue-to-yellow heat scale based on vote share.
+    function heatColor(ratio: number): { bg: string; dark: boolean } {
+      const from = [168, 196, 220]; // soft blue
+      const to = [244, 197, 66]; // yellow
+      const mix = from.map((c, i) => Math.round(c + (to[i] - c) * ratio));
+      return { bg: `rgb(${mix[0]}, ${mix[1]}, ${mix[2]})`, dark: true };
+    }
+
+    async function loadOptions(): Promise<Opcion[]> {
       const res = await fetch("/api/votacion");
       const body = await res.json();
       if (!res.ok) {
-        throw new Error(body.error ?? "No pudimos cargar los días disponibles.");
+        throw new Error(body.error ?? "No pudimos cargar la votación.");
       }
       return body.opciones;
     }
 
-    function renderTally(opciones: { fecha: string; votos: number }[]) {
-      const tally = document.getElementById("tally") as HTMLUListElement;
-      tally.innerHTML = "";
-      for (const opcion of opciones) {
-        const li = document.createElement("li");
-        li.textContent = `${labelFor(opcion.fecha)}: ${opcion.votos} voto${opcion.votos === 1 ? "" : "s"}`;
-        tally.appendChild(li);
+    function selectedOption(): Opcion | undefined {
+      return opciones.find((o) => o.fecha === fechaInput.value);
+    }
+
+    function updateSlotCounts() {
+      const option = selectedOption();
+      (document.getElementById("count-manana") as HTMLElement).textContent =
+        option ? `${option.manana} voto${option.manana === 1 ? "" : "s"}` : "";
+      (document.getElementById("count-tarde") as HTMLElement).textContent =
+        option ? `${option.tarde} voto${option.tarde === 1 ? "" : "s"}` : "";
+    }
+
+    function renderCalendar() {
+      const eligible = new Map(opciones.map((o) => [o.fecha, o]));
+      const maxVotos = Math.max(1, ...opciones.map((o) => o.votos));
+      const total = opciones.reduce((sum, o) => sum + o.votos, 0);
+
+      // Months (YYYY-MM) covered by the voting window, in order.
+      const months = [...new Set(opciones.map((o) => o.fecha.slice(0, 7)))];
+      calendar.innerHTML = "";
+
+      for (const month of months) {
+        const [year, monthNumber] = month.split("-").map(Number);
+        const first = new Date(Date.UTC(year, monthNumber - 1, 1));
+        const daysInMonth = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+        const offset = (first.getUTCDay() + 6) % 7; // Monday-first grid
+
+        const wrap = document.createElement("div");
+        wrap.className = "month";
+
+        const title = document.createElement("h3");
+        title.className = "month-title";
+        title.textContent = monthTitle.format(first);
+        wrap.appendChild(title);
+
+        const grid = document.createElement("div");
+        grid.className = "month-grid";
+
+        for (const weekday of WEEKDAYS) {
+          const head = document.createElement("span");
+          head.className = "cell head";
+          head.textContent = weekday;
+          grid.appendChild(head);
+        }
+        for (let i = 0; i < offset; i++) {
+          const pad = document.createElement("span");
+          pad.className = "cell pad";
+          grid.appendChild(pad);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const fecha = `${month}-${String(day).padStart(2, "0")}`;
+          const option = eligible.get(fecha);
+
+          if (!option) {
+            const cell = document.createElement("span");
+            cell.className = "cell off";
+            cell.textContent = String(day);
+            grid.appendChild(cell);
+            continue;
+          }
+
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "cell day";
+          cell.dataset.fecha = fecha;
+          cell.style.background = heatColor(option.votos / maxVotos).bg;
+
+          const num = document.createElement("span");
+          num.className = "day-num";
+          num.textContent = String(day);
+
+          const count = document.createElement("span");
+          count.className = "day-votes";
+          count.textContent = String(option.votos);
+
+          cell.append(num, count);
+          cell.addEventListener("click", () => {
+            for (const other of calendar.querySelectorAll(".cell.day")) {
+              other.classList.remove("selected");
+            }
+            cell.classList.add("selected");
+            fechaInput.value = fecha;
+            updateSlotCounts();
+          });
+          if (fecha === fechaInput.value) cell.classList.add("selected");
+          grid.appendChild(cell);
+        }
+
+        wrap.appendChild(grid);
+        calendar.appendChild(wrap);
       }
+
+      if (total === 0) {
+        summary.textContent = "Aún no hay votos registrados.";
+      } else {
+        const lider = opciones.reduce((a, b) => (b.votos > a.votos ? b : a));
+        const franjaLider = lider.tarde > lider.manana ? "tarde" : "manana";
+        summary.textContent =
+          `${total} persona${total === 1 ? "" : "s"} han votado. ` +
+          `Va ganando el ${longFormat.format(noonUtc(lider.fecha))}, ${FRANJAS[franjaLider]}.`;
+      }
+      updateSlotCounts();
+    }
+
+    for (const slot of form.querySelectorAll<HTMLButtonElement>(".slot")) {
+      slot.addEventListener("click", () => {
+        for (const other of form.querySelectorAll(".slot")) {
+          other.classList.remove("selected");
+          other.setAttribute("aria-checked", "false");
+        }
+        slot.classList.add("selected");
+        slot.setAttribute("aria-checked", "true");
+        franjaInput.value = slot.dataset.franja ?? "";
+      });
     }
 
     loadOptions()
-      .then((opciones) => {
-        select.innerHTML = "";
-        for (const opcion of opciones) {
-          const option = document.createElement("option");
-          option.value = opcion.fecha;
-          option.textContent = labelFor(opcion.fecha);
-          select.appendChild(option);
-        }
+      .then((data) => {
+        opciones = data;
+        renderCalendar();
       })
       .catch((err) => {
         errorBox.textContent =
@@ -97,6 +246,18 @@ import Base from "../layouts/Base.astro";
       event.preventDefault();
       resultBox.classList.add("hidden");
       errorBox.classList.add("hidden");
+
+      if (!fechaInput.value) {
+        errorBox.textContent = "Seleccione primero un día en el calendario.";
+        errorBox.classList.remove("hidden");
+        return;
+      }
+      if (!franjaInput.value) {
+        errorBox.textContent = "Seleccione la franja horaria.";
+        errorBox.classList.remove("hidden");
+        return;
+      }
+
       submitBtn.disabled = true;
       submitBtn.textContent = "Votando...";
 
@@ -110,15 +271,16 @@ import Base from "../layouts/Base.astro";
         });
         const body = await res.json();
         if (!res.ok) {
-          throw new Error(body.error ?? "No pudimos registrar tu voto.");
+          throw new Error(body.error ?? "No pudimos registrar su voto.");
         }
 
         (document.getElementById("result-message") as HTMLElement).textContent =
-          `Su voto quedó registrado para el ${labelFor(body.fecha)}.`;
+          `Su voto quedó registrado para el ${longFormat.format(noonUtc(body.fecha))}, ${FRANJAS[body.franja]}.`;
 
-        renderTally(await loadOptions());
+        opciones = await loadOptions();
+        renderCalendar();
         resultBox.classList.remove("hidden");
-        form.reset();
+        (document.getElementById("email") as HTMLInputElement).value = "";
       } catch (err) {
         errorBox.textContent =
           err instanceof Error ? err.message : "Ocurrió un error inesperado.";

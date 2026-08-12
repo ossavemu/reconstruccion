@@ -29,6 +29,7 @@ export async function ensureSchema(db: Client): Promise<void> {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT NOT NULL UNIQUE,
         fecha TEXT NOT NULL,
+        franja TEXT NOT NULL DEFAULT 'manana',
         creado_en TEXT NOT NULL DEFAULT (datetime('now'))
       )`,
     ],

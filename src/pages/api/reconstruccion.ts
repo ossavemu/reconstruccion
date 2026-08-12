@@ -13,7 +13,7 @@ function json(body: unknown, status = 200): Response {
 async function sendVoteEmail(to: string, nombre: string, votarUrl: string): Promise<boolean> {
   const apiKey = import.meta.env.RESEND_API_KEY;
   if (!apiKey) return false;
-  const from = import.meta.env.EMAIL_FROM ?? "Renace <onboarding@resend.dev>";
+  const from = import.meta.env.EMAIL_FROM ?? "Reunion de reconstruccion <onboarding@resend.dev>";
   const replyTo = import.meta.env.EMAIL_REPLY_TO;
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -26,12 +26,12 @@ async function sendVoteEmail(to: string, nombre: string, votarUrl: string): Prom
       from,
       ...(replyTo ? { reply_to: [replyTo] } : {}),
       to: [to],
-      subject: "Renace: vota por el dia de la reunion con los ingenieros",
+      subject: "Vote por el dia de la reunion con los ingenieros",
       html: `<p>Hola ${nombre},</p>
 <p>Su registro en modo reconstruccion fue confirmado. El siguiente paso es definir, por votacion, el dia habil de la reunion con el equipo de ingenieros voluntarios.</p>
 <p><a href="${votarUrl}">Vote aqui por el dia que mas le convenga</a></p>
 <p>Cada correo puede votar una sola vez. El dia mas votado sera el de la reunion.</p>
-<p>Equipo Renace</p>`,
+<p>Equipo de la iniciativa de reconstruccion</p>`,
     }),
   });
   return res.ok;
