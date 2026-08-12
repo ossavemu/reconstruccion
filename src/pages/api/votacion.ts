@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { getDb, ensureSchema } from "../../lib/db";
-import { nextBusinessDays } from "../../lib/agenda";
+import { votingWeekDays } from "../../lib/agenda";
 
 export const prerender = false;
 
@@ -11,7 +11,7 @@ export const GET: APIRoute = async () => {
     const db = getDb();
     await ensureSchema(db);
 
-    const dias = nextBusinessDays(5);
+    const dias = votingWeekDays();
     const placeholders = dias.map(() => "?").join(", ");
     const result = await db.execute({
       sql: `SELECT fecha, franja, COUNT(*) AS votos

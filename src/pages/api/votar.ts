@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { getDb, ensureSchema, normalizeEmail, isValidEmail } from "../../lib/db";
-import { nextBusinessDays } from "../../lib/agenda";
+import { votingWeekDays } from "../../lib/agenda";
 
 export const prerender = false;
 
@@ -26,7 +26,7 @@ export const POST: APIRoute = async ({ request }) => {
   if (!isValidEmail(email)) {
     return json({ error: "Ingrese un correo valido." }, 400);
   }
-  if (!nextBusinessDays(5).includes(fecha)) {
+  if (!votingWeekDays().includes(fecha)) {
     return json({ error: "Escoja uno de los dias disponibles." }, 400);
   }
   if (franja !== "manana" && franja !== "tarde") {

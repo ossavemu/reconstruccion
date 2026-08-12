@@ -7,25 +7,17 @@ que quedaron sin vivienda.
 ## Qué hace
 
 - **Landing** que presenta la idea y la reunión de orientación.
-- **Estimador de daños con IA** (`/estimar`): un formulario describe la
-  vivienda y los daños; Claude genera un rango preliminar del costo de
-  reparación o reconstrucción en COP. Está en desarrollo un canal de WhatsApp
-  que recibirá fotos de los daños para su análisis.
 - **Modo reconstrucción** (`/reconstruccion`): la persona se registra con su
   correo y recibe por email (Resend) un enlace de votación.
 - **Votación** (`/votar`): cada correo registrado vota una sola vez por el día
   hábil de la reunión con el equipo de ingenieros voluntarios. El día más
   votado queda agendado.
 
-La certificación de estimaciones por ingenieros civiles (que además entrena
-el modelo) y el canal de WhatsApp están en preparación.
-
 ## Stack
 
 - [Astro](https://astro.build) sin frameworks de UI, desplegable en Vercel
   (`@astrojs/vercel`).
 - [Turso (libSQL)](https://turso.tech) para registros y votos.
-- [Claude API](https://platform.claude.com) para la estimación de daños.
 - [Resend](https://resend.com) para el correo con el enlace de votación
   (opcional: si no está configurado, el enlace se muestra en pantalla).
 
@@ -43,7 +35,6 @@ pnpm dev
 | --- | --- |
 | `TURSO_DATABASE_URL` | URL `libsql://` de la base de datos |
 | `TURSO_AUTH_TOKEN` | Token de acceso de Turso |
-| `ANTHROPIC_API_KEY` | Estimador de daños con IA |
 | `RESEND_API_KEY` | Envío del correo de votación (opcional) |
 | `EMAIL_FROM` | Remitente verificado en Resend (por defecto `onboarding@resend.dev`) |
 | `EMAIL_REPLY_TO` | Dirección personal para respuestas (opcional) |

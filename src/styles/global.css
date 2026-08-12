@@ -504,3 +504,22 @@ form.panel {
     flex: 1 1 45%;
   }
 }
+
+.selected-day {
+  margin: 0;
+  padding: 0.72rem 0.95rem;
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: var(--muted);
+  background: var(--bg);
+}
+
+.selected-day.picked {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-weight: 600;
+  text-transform: capitalize;
+}

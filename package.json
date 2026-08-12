@@ -9,7 +9,6 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "0.116.0",
     "@libsql/client": "0.17.4",
     "@astrojs/vercel": "11.0.5",
     "astro": "7.2.1"

@@ -21,6 +21,11 @@ import Base from "../layouts/Base.astro";
 
         <form id="vote-form" class="panel vote-panel">
           <div class="field">
+            <span class="field-label">Día seleccionado</span>
+            <p id="selected-day" class="selected-day">Toque un día en el calendario.</p>
+          </div>
+
+          <div class="field">
             <span class="field-label">Franja horaria</span>
             <div class="slot-row" role="radiogroup" aria-label="Franja horaria">
               <button type="button" class="slot" data-franja="manana" role="radio" aria-checked="false">
@@ -44,8 +49,8 @@ import Base from "../layouts/Base.astro";
 
           <button type="submit" class="btn" id="submit-btn">Votar</button>
           <p class="notice">
-            Solo pueden votar los correos registrados en
-            <a href="/reconstruccion">modo reconstrucción</a>.
+            Solo pueden votar los correos registrados en&nbsp;<a
+              href="/reconstruccion">modo reconstrucción</a>.
           </p>
         </form>
       </div>
@@ -116,6 +121,17 @@ import Base from "../layouts/Base.astro";
 
     function selectedOption(): Opcion | undefined {
       return opciones.find((o) => o.fecha === fechaInput.value);
+    }
+
+    function updateSelectedDay() {
+      const display = document.getElementById("selected-day") as HTMLElement;
+      if (fechaInput.value) {
+        display.textContent = longFormat.format(noonUtc(fechaInput.value));
+        display.classList.add("picked");
+      } else {
+        display.textContent = "Toque un día en el calendario.";
+        display.classList.remove("picked");
+      }
     }
 
     function updateSlotCounts() {
@@ -197,6 +213,7 @@ import Base from "../layouts/Base.astro";
             }
             cell.classList.add("selected");
             fechaInput.value = fecha;
+            updateSelectedDay();
             updateSlotCounts();
           });
           if (fecha === fechaInput.value) cell.classList.add("selected");
