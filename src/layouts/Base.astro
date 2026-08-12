@@ -11,7 +11,8 @@ const {
   description = "Iniciativa humanitaria de orientación técnica para afectados por el terremoto.",
 } = Astro.props;
 
-const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
+// Astro.site comes from astro.config.mjs; fall back to the request URL in dev.
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
 ---
 
 <!doctype html>
