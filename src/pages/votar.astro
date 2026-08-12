@@ -1,0 +1,132 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Votar por el día de la reunión | Renace">
+  <section>
+    <div class="container">
+      <h2>Vota por el día de la reunión</h2>
+      <p class="section-intro">
+        Escoge el día hábil que más te sirva para la reunión con el equipo de
+        ingenieros. Solo pueden votar los correos registrados en modo
+        reconstrucción, y cada correo vota una sola vez. El día más votado
+        será el de la reunión.
+      </p>
+
+      <form id="vote-form" class="panel">
+        <div class="field">
+          <label for="email">Tu correo registrado</label>
+          <input id="email" name="email" type="email" required />
+        </div>
+
+        <div class="field">
+          <label for="fecha">Día de la reunión</label>
+          <select id="fecha" name="fecha" required>
+            <option value="">Cargando días disponibles...</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn" id="submit-btn">Votar</button>
+      </form>
+
+      <div id="result" class="result hidden">
+        <h3>Voto registrado</h3>
+        <p id="result-message"></p>
+        <h3>Así va la votación</h3>
+        <ul id="tally"></ul>
+      </div>
+
+      <div id="error" class="error-box hidden"></div>
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById("vote-form") as HTMLFormElement;
+    const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+    const select = document.getElementById("fecha") as HTMLSelectElement;
+    const resultBox = document.getElementById("result") as HTMLDivElement;
+    const errorBox = document.getElementById("error") as HTMLDivElement;
+
+    const dayFormat = new Intl.DateTimeFormat("es-CO", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      timeZone: "America/Bogota",
+    });
+
+    function labelFor(fecha: string): string {
+      return dayFormat.format(new Date(`${fecha}T12:00:00Z`));
+    }
+
+    async function loadOptions(): Promise<{ fecha: string; votos: number }[]> {
+      const res = await fetch("/api/votacion");
+      const body = await res.json();
+      if (!res.ok) {
+        throw new Error(body.error ?? "No pudimos cargar los días disponibles.");
+      }
+      return body.opciones;
+    }
+
+    function renderTally(opciones: { fecha: string; votos: number }[]) {
+      const tally = document.getElementById("tally") as HTMLUListElement;
+      tally.innerHTML = "";
+      for (const opcion of opciones) {
+        const li = document.createElement("li");
+        li.textContent = `${labelFor(opcion.fecha)}: ${opcion.votos} voto${opcion.votos === 1 ? "" : "s"}`;
+        tally.appendChild(li);
+      }
+    }
+
+    loadOptions()
+      .then((opciones) => {
+        select.innerHTML = "";
+        for (const opcion of opciones) {
+          const option = document.createElement("option");
+          option.value = opcion.fecha;
+          option.textContent = labelFor(opcion.fecha);
+          select.appendChild(option);
+        }
+      })
+      .catch((err) => {
+        errorBox.textContent =
+          err instanceof Error ? err.message : "Error cargando la votación.";
+        errorBox.classList.remove("hidden");
+      });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      resultBox.classList.add("hidden");
+      errorBox.classList.add("hidden");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Votando...";
+
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      try {
+        const res = await fetch("/api/votar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const body = await res.json();
+        if (!res.ok) {
+          throw new Error(body.error ?? "No pudimos registrar tu voto.");
+        }
+
+        (document.getElementById("result-message") as HTMLElement).textContent =
+          `Tu voto quedó registrado para el ${labelFor(body.fecha)}. Gracias por participar.`;
+
+        renderTally(await loadOptions());
+        resultBox.classList.remove("hidden");
+        form.reset();
+      } catch (err) {
+        errorBox.textContent =
+          err instanceof Error ? err.message : "Ocurrió un error inesperado.";
+        errorBox.classList.remove("hidden");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Votar";
+      }
+    });
+  </script>
+</Base>

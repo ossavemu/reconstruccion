@@ -1,0 +1,48 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = "Renace: apoyo a sobrevivientes del terremoto para estimar daños y reconstruir.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a href="/" class="brand">Re<span>nace</span></a>
+        <nav class="site-nav">
+          <a href="/#como-funciona">Cómo funciona</a>
+          <a href="/estimar">Estimar daños</a>
+          <a href="/reconstruccion">Modo reconstrucción</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          Renace es una iniciativa humanitaria y gratuita para sobrevivientes
+          del terremoto del 10 de agosto de 2026 en Colombia. Las estimaciones
+          generadas por IA son preliminares y no reemplazan una inspección
+          técnica profesional.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

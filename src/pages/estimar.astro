@@ -1,0 +1,143 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Estimar daños | Renace">
+  <section>
+    <div class="container">
+      <h2>Estimador de daños</h2>
+      <p class="section-intro">
+        Cuéntanos sobre tu vivienda y los daños que sufrió. La IA calculará un
+        rango preliminar del valor de reparación o reconstrucción en pesos
+        colombianos. Es una primera referencia: la cifra definitiva la
+        certifica el equipo de ingenieros civiles.
+      </p>
+
+      <form id="damage-form" class="panel">
+        <div class="field">
+          <label for="municipio">Municipio o ciudad</label>
+          <input id="municipio" name="municipio" type="text" required />
+        </div>
+
+        <div class="field">
+          <label for="tipoVivienda">Tipo de vivienda</label>
+          <select id="tipoVivienda" name="tipoVivienda" required>
+            <option value="casa de un piso">Casa de un piso</option>
+            <option value="casa de dos o mas pisos">Casa de dos o más pisos</option>
+            <option value="apartamento">Apartamento</option>
+            <option value="vivienda rural">Vivienda rural</option>
+            <option value="local o vivienda mixta">Local o vivienda mixta</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="areaM2">Área aproximada (m²)</label>
+          <input id="areaM2" name="areaM2" type="number" min="10" max="2000" value="60" required />
+        </div>
+
+        <div class="field">
+          <label for="nivelDano">Nivel de daño que observas</label>
+          <select id="nivelDano" name="nivelDano" required>
+            <option value="grietas leves en muros o pisos">Grietas leves en muros o pisos</option>
+            <option value="grietas profundas y desprendimientos">Grietas profundas y desprendimientos</option>
+            <option value="colapso parcial de muros o techo">Colapso parcial de muros o techo</option>
+            <option value="colapso total o inhabitable">Colapso total o inhabitable</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="descripcion">Describe los daños con tus palabras</label>
+          <textarea
+            id="descripcion"
+            name="descripcion"
+            placeholder="Ejemplo: se cayó el muro de la cocina, el techo de la sala quedó inclinado, hay grietas en dos columnas..."
+            required></textarea>
+        </div>
+
+        <button type="submit" class="btn" id="submit-btn">Calcular estimación</button>
+        <p class="notice">
+          Muy pronto podrás hacer esto enviando fotos al bot de WhatsApp de
+          Renace.
+        </p>
+      </form>
+
+      <div id="result" class="result hidden">
+        <h3>Estimación preliminar</h3>
+        <p class="amount" id="result-amount"></p>
+        <p id="result-summary"></p>
+        <p id="result-risk"></p>
+        <ul id="result-recs"></ul>
+        <p class="notice">
+          Esta cifra es orientativa y será revisada por ingenieros civiles en
+          la fase de certificación.
+        </p>
+        <a href="/reconstruccion" class="btn">Entrar en modo reconstrucción</a>
+      </div>
+
+      <div id="error" class="error-box hidden"></div>
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById("damage-form") as HTMLFormElement;
+    const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+    const resultBox = document.getElementById("result") as HTMLDivElement;
+    const errorBox = document.getElementById("error") as HTMLDivElement;
+
+    const cop = new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0,
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      resultBox.classList.add("hidden");
+      errorBox.classList.add("hidden");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Calculando...";
+
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      try {
+        const res = await fetch("/api/estimar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const body = await res.json();
+        if (!res.ok) {
+          throw new Error(body.error ?? "No pudimos calcular la estimación.");
+        }
+
+        const est = body.estimacion;
+        (document.getElementById("result-amount") as HTMLElement).textContent =
+          `${cop.format(est.costo_min_cop)} a ${cop.format(est.costo_max_cop)}`;
+        (document.getElementById("result-summary") as HTMLElement).textContent =
+          est.resumen;
+        (document.getElementById("result-risk") as HTMLElement).textContent =
+          `Nivel de riesgo estructural: ${est.nivel_riesgo}` +
+          (est.requiere_inspeccion_urgente
+            ? ". Requiere inspección urgente: no habites la vivienda hasta que un profesional la revise."
+            : ".");
+
+        const recs = document.getElementById("result-recs") as HTMLUListElement;
+        recs.innerHTML = "";
+        for (const rec of est.recomendaciones ?? []) {
+          const li = document.createElement("li");
+          li.textContent = rec;
+          recs.appendChild(li);
+        }
+        resultBox.classList.remove("hidden");
+        resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (err) {
+        errorBox.textContent =
+          err instanceof Error ? err.message : "Ocurrió un error inesperado.";
+        errorBox.classList.remove("hidden");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Calcular estimación";
+      }
+    });
+  </script>
+</Base>

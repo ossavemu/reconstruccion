@@ -1,0 +1,84 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Modo reconstrucción | Renace">
+  <section>
+    <div class="container">
+      <h2>Modo reconstrucción</h2>
+      <p class="section-intro">
+        Al entrar en modo reconstrucción quedas registrado y recibes en tu
+        correo un enlace para votar por el día hábil de la reunión con el
+        equipo de ingenieros. El día más votado será el de la reunión.
+      </p>
+
+      <form id="rebuild-form" class="panel">
+        <div class="field">
+          <label for="nombre">Nombre completo</label>
+          <input id="nombre" name="nombre" type="text" required />
+        </div>
+
+        <div class="field">
+          <label for="email">Correo electrónico</label>
+          <input id="email" name="email" type="email" required />
+        </div>
+
+        <button type="submit" class="btn" id="submit-btn">
+          Entrar en modo reconstrucción
+        </button>
+      </form>
+
+      <div id="result" class="result hidden">
+        <h3>Listo, ya estás en modo reconstrucción</h3>
+        <p id="result-message"></p>
+        <a href="/votar" class="btn">Ir a votar por el día de la reunión</a>
+      </div>
+
+      <div id="error" class="error-box hidden"></div>
+    </div>
+  </section>
+
+  <script>
+    const form = document.getElementById("rebuild-form") as HTMLFormElement;
+    const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+    const resultBox = document.getElementById("result") as HTMLDivElement;
+    const errorBox = document.getElementById("error") as HTMLDivElement;
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      resultBox.classList.add("hidden");
+      errorBox.classList.add("hidden");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Registrando...";
+
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      try {
+        const res = await fetch("/api/reconstruccion", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const body = await res.json();
+        if (!res.ok) {
+          throw new Error(body.error ?? "No pudimos procesar tu solicitud.");
+        }
+
+        const message = document.getElementById("result-message") as HTMLElement;
+        message.textContent = body.enviado
+          ? "Te enviamos al correo el enlace de votación. También puedes votar desde aquí:"
+          : "Vota ahora por el día que más te sirva para la reunión con los ingenieros:";
+
+        resultBox.classList.remove("hidden");
+        form.reset();
+      } catch (err) {
+        errorBox.textContent =
+          err instanceof Error ? err.message : "Ocurrió un error inesperado.";
+        errorBox.classList.remove("hidden");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Entrar en modo reconstrucción";
+      }
+    });
+  </script>
+</Base>
