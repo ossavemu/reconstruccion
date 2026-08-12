@@ -1,3 +1,12 @@
+// Escapes user-provided text before embedding it in email HTML.
+export function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
 // Minimal Resend wrapper shared by the API endpoints.
 interface SendEmailOptions {
   to: string;

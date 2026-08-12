@@ -9,8 +9,11 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@libsql/client": "0.17.4",
     "@astrojs/vercel": "11.0.5",
+    "@libsql/client": "0.17.4",
     "astro": "7.2.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1"
   }
 }

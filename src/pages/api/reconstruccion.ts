@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { getDb, ensureSchema, normalizeEmail, isValidEmail } from "../../lib/db";
-import { sendEmail, notifyAdmin } from "../../lib/email";
+import { sendEmail, notifyAdmin, escapeHtml } from "../../lib/email";
 
 export const prerender = false;
 
@@ -41,7 +41,7 @@ export const POST: APIRoute = async ({ request }) => {
       enviado = await sendEmail({
         to: email,
         subject: "Vote por el dia de la reunion con los ingenieros",
-        html: `<p>Hola ${nombre},</p>
+        html: `<p>Hola ${escapeHtml(nombre)},</p>
 <p>Su registro en modo reconstruccion fue confirmado. El siguiente paso es definir, por votacion, el dia habil de la reunion con el equipo de ingenieros voluntarios.</p>
 <p><a href="${votarUrl}">Vote aqui por el dia que mas le convenga</a></p>
 <p>Cada correo puede votar una sola vez. El dia mas votado sera el de la reunion.</p>
@@ -55,7 +55,7 @@ export const POST: APIRoute = async ({ request }) => {
       await notifyAdmin(
         "Nuevo registro en modo reconstruccion",
         `<p>Se registro una nueva persona:</p>
-<p><strong>${nombre}</strong> &lt;${email}&gt;</p>
+<p><strong>${escapeHtml(nombre)}</strong> &lt;${escapeHtml(email)}&gt;</p>
 <p>Correo de votacion entregado: ${enviado ? "si" : "no (revisar dominio verificado en Resend)"}</p>`,
       );
     } catch (error) {

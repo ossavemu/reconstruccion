@@ -15,14 +15,16 @@ function isWeekend(dateString: string): boolean {
   return day === 0 || day === 6;
 }
 
-// Every business day from VOTING_START through VOTING_END, inclusive.
+// Every business day from VOTING_START through VOTING_END that has not
+// already passed in Colombia's timezone.
 export function votingWeekDays(): string[] {
+  const today = bogotaDateString(new Date());
   const days: string[] = [];
   let cursor = Date.parse(`${VOTING_START}T12:00:00Z`);
   const end = Date.parse(`${VOTING_END}T12:00:00Z`);
   while (cursor <= end) {
     const dateString = bogotaDateString(new Date(cursor));
-    if (!isWeekend(dateString)) days.push(dateString);
+    if (!isWeekend(dateString) && dateString > today) days.push(dateString);
     cursor += DAY_MS;
   }
   return days;

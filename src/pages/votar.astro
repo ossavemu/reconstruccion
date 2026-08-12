@@ -126,7 +126,8 @@ import Base from "../layouts/Base.astro";
     function updateSelectedDay() {
       const display = document.getElementById("selected-day") as HTMLElement;
       if (fechaInput.value) {
-        display.textContent = longFormat.format(noonUtc(fechaInput.value));
+        const label = longFormat.format(noonUtc(fechaInput.value));
+        display.textContent = label.charAt(0).toUpperCase() + label.slice(1);
         display.classList.add("picked");
       } else {
         display.textContent = "Toque un día en el calendario.";

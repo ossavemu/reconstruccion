@@ -521,5 +521,4 @@ form.panel {
   background: var(--accent-soft);
   color: var(--accent-dark);
   font-weight: 600;
-  text-transform: capitalize;
 }
