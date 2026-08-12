@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { getDb, ensureSchema, normalizeEmail, isValidEmail } from "../../lib/db";
+import { sendEmail, notifyAdmin } from "../../lib/email";
 
 export const prerender = false;
 
@@ -8,33 +9,6 @@ function json(body: unknown, status = 200): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-async function sendVoteEmail(to: string, nombre: string, votarUrl: string): Promise<boolean> {
-  const apiKey = import.meta.env.RESEND_API_KEY;
-  if (!apiKey) return false;
-  const from = import.meta.env.EMAIL_FROM ?? "Reunion de reconstruccion <onboarding@resend.dev>";
-  const replyTo = import.meta.env.EMAIL_REPLY_TO;
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      ...(replyTo ? { reply_to: [replyTo] } : {}),
-      to: [to],
-      subject: "Vote por el dia de la reunion con los ingenieros",
-      html: `<p>Hola ${nombre},</p>
-<p>Su registro en modo reconstruccion fue confirmado. El siguiente paso es definir, por votacion, el dia habil de la reunion con el equipo de ingenieros voluntarios.</p>
-<p><a href="${votarUrl}">Vote aqui por el dia que mas le convenga</a></p>
-<p>Cada correo puede votar una sola vez. El dia mas votado sera el de la reunion.</p>
-<p>Equipo de la iniciativa de reconstruccion</p>`,
-    }),
-  });
-  return res.ok;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -64,9 +38,28 @@ export const POST: APIRoute = async ({ request }) => {
     const votarUrl = new URL("/votar", request.url).toString();
     let enviado = false;
     try {
-      enviado = await sendVoteEmail(email, nombre, votarUrl);
+      enviado = await sendEmail({
+        to: email,
+        subject: "Vote por el dia de la reunion con los ingenieros",
+        html: `<p>Hola ${nombre},</p>
+<p>Su registro en modo reconstruccion fue confirmado. El siguiente paso es definir, por votacion, el dia habil de la reunion con el equipo de ingenieros voluntarios.</p>
+<p><a href="${votarUrl}">Vote aqui por el dia que mas le convenga</a></p>
+<p>Cada correo puede votar una sola vez. El dia mas votado sera el de la reunion.</p>
+<p>Equipo de la iniciativa de reconstruccion</p>`,
+      });
     } catch (error) {
       console.error("email send failed:", error);
+    }
+
+    try {
+      await notifyAdmin(
+        "Nuevo registro en modo reconstruccion",
+        `<p>Se registro una nueva persona:</p>
+<p><strong>${nombre}</strong> &lt;${email}&gt;</p>
+<p>Correo de votacion entregado: ${enviado ? "si" : "no (revisar dominio verificado en Resend)"}</p>`,
+      );
+    } catch (error) {
+      console.error("admin notification failed:", error);
     }
 
     return json({ enviado, votarUrl: "/votar" });

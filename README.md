@@ -47,6 +47,7 @@ pnpm dev
 | `RESEND_API_KEY` | Envío del correo de votación (opcional) |
 | `EMAIL_FROM` | Remitente verificado en Resend (por defecto `onboarding@resend.dev`) |
 | `EMAIL_REPLY_TO` | Dirección personal para respuestas (opcional) |
+| `ADMIN_EMAIL` | Correo del organizador que recibe una notificación por cada registro (opcional) |
 
 ## Despliegue en Vercel
 
