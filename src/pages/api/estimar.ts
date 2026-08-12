@@ -45,7 +45,7 @@ export const POST: APIRoute = async ({ request }) => {
   const apiKey = import.meta.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return json(
-      { error: "El estimador no esta configurado todavia. Intenta mas tarde." },
+      { error: "El estimador no esta configurado todavia. Intente mas tarde." },
       503,
     );
   }
@@ -59,7 +59,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const { municipio, tipoVivienda, areaM2, nivelDano, descripcion } = body;
   if (!municipio || !tipoVivienda || !areaM2 || !nivelDano || !descripcion) {
-    return json({ error: "Completa todos los campos del formulario." }, 400);
+    return json({ error: "Complete todos los campos del formulario." }, 400);
   }
 
   const userPrompt = `Vivienda afectada por el terremoto:
@@ -102,7 +102,7 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error) {
     console.error("estimar endpoint error:", error);
     return json(
-      { error: "Ocurrio un error generando la estimacion. Intenta de nuevo." },
+      { error: "Ocurrio un error generando la estimacion. Intente de nuevo." },
       500,
     );
   }

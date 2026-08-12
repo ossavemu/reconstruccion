@@ -23,10 +23,10 @@ export const POST: APIRoute = async ({ request }) => {
   const fecha = (body.fecha ?? "").trim();
 
   if (!isValidEmail(email)) {
-    return json({ error: "Ingresa un correo valido." }, 400);
+    return json({ error: "Ingrese un correo valido." }, 400);
   }
   if (!nextBusinessDays(5).includes(fecha)) {
-    return json({ error: "Escoge uno de los dias disponibles." }, 400);
+    return json({ error: "Escoja uno de los dias disponibles." }, 400);
   }
 
   try {
@@ -42,7 +42,7 @@ export const POST: APIRoute = async ({ request }) => {
       return json(
         {
           error:
-            "Este correo no esta registrado. Entra primero en modo reconstruccion.",
+            "Este correo no esta registrado. Registrese primero en modo reconstruccion.",
         },
         403,
       );
@@ -56,7 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
     } catch (error) {
       const message = error instanceof Error ? error.message : "";
       if (message.includes("UNIQUE")) {
-        return json({ error: "Este correo ya voto." }, 409);
+        return json({ error: "Este correo ya registro un voto." }, 409);
       }
       throw error;
     }
@@ -64,6 +64,6 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: true, fecha });
   } catch (error) {
     console.error("votar endpoint error:", error);
-    return json({ error: "No pudimos registrar tu voto. Intenta de nuevo." }, 500);
+    return json({ error: "No pudimos registrar su voto. Intente de nuevo." }, 500);
   }
 };

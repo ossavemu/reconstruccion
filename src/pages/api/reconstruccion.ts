@@ -28,8 +28,8 @@ async function sendVoteEmail(to: string, nombre: string, votarUrl: string): Prom
       to: [to],
       subject: "Renace: vota por el dia de la reunion con los ingenieros",
       html: `<p>Hola ${nombre},</p>
-<p>Ya estas en modo reconstruccion. El siguiente paso es escoger, entre todos, el dia habil de la reunion con el equipo de ingenieros.</p>
-<p><a href="${votarUrl}">Vota aqui por el dia que mas te sirva</a></p>
+<p>Su registro en modo reconstruccion fue confirmado. El siguiente paso es definir, por votacion, el dia habil de la reunion con el equipo de ingenieros voluntarios.</p>
+<p><a href="${votarUrl}">Vote aqui por el dia que mas le convenga</a></p>
 <p>Cada correo puede votar una sola vez. El dia mas votado sera el de la reunion.</p>
 <p>Equipo Renace</p>`,
     }),
@@ -48,7 +48,7 @@ export const POST: APIRoute = async ({ request }) => {
   const nombre = (body.nombre ?? "").trim();
   const email = normalizeEmail(body.email ?? "");
   if (!nombre || !isValidEmail(email)) {
-    return json({ error: "Ingresa tu nombre y un correo valido." }, 400);
+    return json({ error: "Ingrese su nombre y un correo valido." }, 400);
   }
 
   try {
@@ -72,6 +72,6 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ enviado, votarUrl: "/votar" });
   } catch (error) {
     console.error("reconstruccion endpoint error:", error);
-    return json({ error: "No pudimos registrar tu solicitud. Intenta de nuevo." }, 500);
+    return json({ error: "No pudimos registrar su solicitud. Intente de nuevo." }, 500);
   }
 };

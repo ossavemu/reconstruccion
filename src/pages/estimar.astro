@@ -7,10 +7,10 @@ import Base from "../layouts/Base.astro";
     <div class="container">
       <h2>Estimador de daños</h2>
       <p class="section-intro">
-        Cuéntanos sobre tu vivienda y los daños que sufrió. La IA calculará un
-        rango preliminar del valor de reparación o reconstrucción en pesos
+        Describa su vivienda y los daños que sufrió. La herramienta calculará
+        un rango preliminar del valor de reparación o reconstrucción en pesos
         colombianos. Es una primera referencia: la cifra definitiva la
-        certifica el equipo de ingenieros civiles.
+        certifica el equipo de ingenieros civiles voluntarios.
       </p>
 
       <form id="damage-form" class="panel">
@@ -36,7 +36,7 @@ import Base from "../layouts/Base.astro";
         </div>
 
         <div class="field">
-          <label for="nivelDano">Nivel de daño que observas</label>
+          <label for="nivelDano">Nivel de daño observado</label>
           <select id="nivelDano" name="nivelDano" required>
             <option value="grietas leves en muros o pisos">Grietas leves en muros o pisos</option>
             <option value="grietas profundas y desprendimientos">Grietas profundas y desprendimientos</option>
@@ -46,7 +46,7 @@ import Base from "../layouts/Base.astro";
         </div>
 
         <div class="field">
-          <label for="descripcion">Describe los daños con tus palabras</label>
+          <label for="descripcion">Descripción de los daños</label>
           <textarea
             id="descripcion"
             name="descripcion"
@@ -56,8 +56,8 @@ import Base from "../layouts/Base.astro";
 
         <button type="submit" class="btn" id="submit-btn">Calcular estimación</button>
         <p class="notice">
-          Muy pronto podrás hacer esto enviando fotos al bot de WhatsApp de
-          Renace.
+          Está en desarrollo un canal de WhatsApp que permitirá enviar fotos de
+          los daños para su análisis.
         </p>
       </form>
 
@@ -118,7 +118,7 @@ import Base from "../layouts/Base.astro";
         (document.getElementById("result-risk") as HTMLElement).textContent =
           `Nivel de riesgo estructural: ${est.nivel_riesgo}` +
           (est.requiere_inspeccion_urgente
-            ? ". Requiere inspección urgente: no habites la vivienda hasta que un profesional la revise."
+            ? ". Requiere inspección urgente: no habite la vivienda hasta que un profesional la revise."
             : ".");
 
         const recs = document.getElementById("result-recs") as HTMLUListElement;

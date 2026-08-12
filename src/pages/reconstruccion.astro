@@ -7,9 +7,9 @@ import Base from "../layouts/Base.astro";
     <div class="container">
       <h2>Modo reconstrucción</h2>
       <p class="section-intro">
-        Al entrar en modo reconstrucción quedas registrado y recibes en tu
-        correo un enlace para votar por el día hábil de la reunión con el
-        equipo de ingenieros. El día más votado será el de la reunión.
+        Al registrarse en modo reconstrucción recibirá en su correo un enlace
+        para votar por el día hábil de la reunión con el equipo de ingenieros
+        voluntarios. El día más votado será el de la reunión.
       </p>
 
       <form id="rebuild-form" class="panel">
@@ -29,7 +29,7 @@ import Base from "../layouts/Base.astro";
       </form>
 
       <div id="result" class="result hidden">
-        <h3>Listo, ya estás en modo reconstrucción</h3>
+        <h3>Registro confirmado</h3>
         <p id="result-message"></p>
         <a href="/votar" class="btn">Ir a votar por el día de la reunión</a>
       </div>
@@ -66,8 +66,8 @@ import Base from "../layouts/Base.astro";
 
         const message = document.getElementById("result-message") as HTMLElement;
         message.textContent = body.enviado
-          ? "Te enviamos al correo el enlace de votación. También puedes votar desde aquí:"
-          : "Vota ahora por el día que más te sirva para la reunión con los ingenieros:";
+          ? "Le enviamos al correo el enlace de votación. También puede votar desde esta página:"
+          : "Vote por el día que más le convenga para la reunión con los ingenieros:";
 
         resultBox.classList.remove("hidden");
         form.reset();
